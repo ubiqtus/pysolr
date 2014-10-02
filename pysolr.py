@@ -318,6 +318,22 @@ class Solr(object):
             return response
         else:
 
+            conn = HTTPConnection(self.host, self.port)
+            start_time = time.time()
+            self.log.debug("Starting request to '%s:%s/%s' (%s) with body '%s'..." % (self.host, self.port, path, method, str(body)[:10]))
+            conn.request(method, path, body, headers)
+            response = conn.getresponse()
+            end_time = time.time()
+            self.log.info("Finished '%s:%s/%s' (%s) with body '%s' in %0.3f seconds." % (self.host, self.port, path, method, str(body)[:10], end_time - start_time))
+
+            if response.status != 200:
+                error_message = self._extract_error(dict(response.getheaders()), response.read())
+                self.log.error(error_message)
+                raise SolrError(error_message)
+
+            return response.read()
+        
+
         if headers is None:
             headers = {}
 
