@@ -9,15 +9,12 @@ import re
 import requests
 import time
 import types
-<<<<<<< HEAD
 import ast
 import collections
-=======
 import urllib
 import urllib2
 import base64
 from urlparse import urlsplit, urlunsplit
->>>>>>> 358a9312c82012661a10fc1f60329175cefb99c3
 
 try:
     # Prefer lxml, if installed.
@@ -261,8 +258,6 @@ class Solr(object):
     def __init__(self, url, decoder=None, timeout=60):
         self.decoder = decoder or json.JSONDecoder()
         self.url = url
-<<<<<<< HEAD
-=======
         result = urlsplit(url)
         self.scheme = result.scheme
         self.host = result.hostname
@@ -273,7 +268,7 @@ class Solr(object):
                                                                     result.password)
         self.base_url = urlunsplit((self.scheme, result.netloc, '', '', ''))
         self.path = result.path.rstrip('/')
->>>>>>> 358a9312c82012661a10fc1f60329175cefb99c3
+
         self.timeout = timeout
         self.log = self._get_log()
         self.session = requests.Session()
@@ -282,7 +277,6 @@ class Solr(object):
     def _get_log(self):
         return LOG
 
-<<<<<<< HEAD
     def _create_full_url(self, path=''):
         if len(path):
             return '/'.join([self.url.rstrip('/'), path.lstrip('/')])
@@ -294,7 +288,7 @@ class Solr(object):
         url = self._create_full_url(path)
         method = method.lower()
         log_body = body
-=======
+
     def _send_request(self, method, path, body=None, headers=None):
         if headers is None:
             headers = {}
@@ -323,7 +317,6 @@ class Solr(object):
 
             return response
         else:
->>>>>>> 358a9312c82012661a10fc1f60329175cefb99c3
 
         if headers is None:
             headers = {}
