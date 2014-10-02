@@ -9,8 +9,15 @@ import re
 import requests
 import time
 import types
+<<<<<<< HEAD
 import ast
 import collections
+=======
+import urllib
+import urllib2
+import base64
+from urlparse import urlsplit, urlunsplit
+>>>>>>> 358a9312c82012661a10fc1f60329175cefb99c3
 
 try:
     # Prefer lxml, if installed.
@@ -254,6 +261,19 @@ class Solr(object):
     def __init__(self, url, decoder=None, timeout=60):
         self.decoder = decoder or json.JSONDecoder()
         self.url = url
+<<<<<<< HEAD
+=======
+        result = urlsplit(url)
+        self.scheme = result.scheme
+        self.host = result.hostname
+        self.port = result.port
+        self.auth = None
+        if result.username is not None and result.password is not None:
+            self.auth = 'Basic ' + base64.encodestring(result.username + ':' +
+                                                                    result.password)
+        self.base_url = urlunsplit((self.scheme, result.netloc, '', '', ''))
+        self.path = result.path.rstrip('/')
+>>>>>>> 358a9312c82012661a10fc1f60329175cefb99c3
         self.timeout = timeout
         self.log = self._get_log()
         self.session = requests.Session()
@@ -262,6 +282,7 @@ class Solr(object):
     def _get_log(self):
         return LOG
 
+<<<<<<< HEAD
     def _create_full_url(self, path=''):
         if len(path):
             return '/'.join([self.url.rstrip('/'), path.lstrip('/')])
@@ -273,6 +294,36 @@ class Solr(object):
         url = self._create_full_url(path)
         method = method.lower()
         log_body = body
+=======
+    def _send_request(self, method, path, body=None, headers=None):
+        if headers is None:
+            headers = {}
+        if self.auth is not None:
+            headers['Authorization'] = self.auth
+        if TIMEOUTS_AVAILABLE:
+            http = Http(timeout=self.timeout)
+            url = self.base_url + path
+
+            try:
+                start_time = time.time()
+                self.log.debug("Starting request to '%s' (%s) with body '%s'..." % (url, method, str(body)[:10]))
+                headers, response = http.request(url, method=method, body=body, headers=headers)
+                end_time = time.time()
+                self.log.info("Finished '%s' (%s) with body '%s' in %0.3f seconds." % (url, method, str(body)[:10], end_time - start_time))
+            except AttributeError:
+                # For httplib2.
+                error_message = "Failed to connect to server at '%s'. Are you sure '%s' is correct? Checking it in a browser might help..." % (url, self.base_url)
+                self.log.error(error_message)
+                raise SolrError(error_message)
+
+            if int(headers['status']) != 200:
+                error_message = self._extract_error(headers, response)
+                self.log.error(error_message)
+                raise SolrError(error_message)
+
+            return response
+        else:
+>>>>>>> 358a9312c82012661a10fc1f60329175cefb99c3
 
         if headers is None:
             headers = {}
