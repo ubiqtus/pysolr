@@ -11,10 +11,6 @@ import time
 import types
 import ast
 import collections
-import urllib
-import urllib2
-import base64
-from urlparse import urlsplit, urlunsplit
 
 try:
     # Prefer lxml, if installed.
@@ -240,7 +236,7 @@ class Results(object):
 
 class Solr(object):
     """
-    The main object for working with Solr.
+    The main object for working with Solr. here
 
     Optionally accepts ``decoder`` for an alternate JSON decoder instance.
     Default is ``json.JSONDecoder()``.
@@ -258,17 +254,6 @@ class Solr(object):
     def __init__(self, url, decoder=None, timeout=60):
         self.decoder = decoder or json.JSONDecoder()
         self.url = url
-        result = urlsplit(url)
-        self.scheme = result.scheme
-        self.host = result.hostname
-        self.port = result.port
-        self.auth = None
-        if result.username is not None and result.password is not None:
-            self.auth = 'Basic ' + base64.encodestring(result.username + ':' +
-                                                                    result.password)
-        self.base_url = urlunsplit((self.scheme, result.netloc, '', '', ''))
-        self.path = result.path.rstrip('/')
-
         self.timeout = timeout
         self.log = self._get_log()
         self.session = requests.Session()
@@ -288,51 +273,6 @@ class Solr(object):
         url = self._create_full_url(path)
         method = method.lower()
         log_body = body
-
-    def _send_request(self, method, path, body=None, headers=None):
-        if headers is None:
-            headers = {}
-        if self.auth is not None:
-            headers['Authorization'] = self.auth
-        if TIMEOUTS_AVAILABLE:
-            http = Http(timeout=self.timeout)
-            url = self.base_url + path
-
-            try:
-                start_time = time.time()
-                self.log.debug("Starting request to '%s' (%s) with body '%s'..." % (url, method, str(body)[:10]))
-                headers, response = http.request(url, method=method, body=body, headers=headers)
-                end_time = time.time()
-                self.log.info("Finished '%s' (%s) with body '%s' in %0.3f seconds." % (url, method, str(body)[:10], end_time - start_time))
-            except AttributeError:
-                # For httplib2.
-                error_message = "Failed to connect to server at '%s'. Are you sure '%s' is correct? Checking it in a browser might help..." % (url, self.base_url)
-                self.log.error(error_message)
-                raise SolrError(error_message)
-
-            if int(headers['status']) != 200:
-                error_message = self._extract_error(headers, response)
-                self.log.error(error_message)
-                raise SolrError(error_message)
-
-            return response
-        else:
-
-            conn = HTTPConnection(self.host, self.port)
-            start_time = time.time()
-            self.log.debug("Starting request to '%s:%s/%s' (%s) with body '%s'..." % (self.host, self.port, path, method, str(body)[:10]))
-            conn.request(method, path, body, headers)
-            response = conn.getresponse()
-            end_time = time.time()
-            self.log.info("Finished '%s:%s/%s' (%s) with body '%s' in %0.3f seconds." % (self.host, self.port, path, method, str(body)[:10], end_time - start_time))
-
-            if response.status != 200:
-                error_message = self._extract_error(dict(response.getheaders()), response.read())
-                self.log.error(error_message)
-                raise SolrError(error_message)
-
-            return response.read()
-        
 
         if headers is None:
             headers = {}
@@ -844,11 +784,11 @@ class Solr(object):
 
         Starting from Solr 4.0 it's possible to using atomic updates.
 
-        Simply pass instead of raw value dict in format like::
+        Simply pass in a dictionary with a list of values (can be a list with one element)::
 
             {
                 "id": "doc_1",
-                "title": {"set": "A test document"},
+                "title": {"set": ["A test document"]},
             }
 
         where possible operators are: ``set``, ``inc`` and ``add``.
